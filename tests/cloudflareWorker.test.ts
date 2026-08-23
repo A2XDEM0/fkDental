@@ -90,3 +90,31 @@ test('同步上传写入独立 latest，并可原样拉取', async () => {
   assert.equal(pullResponse.status, 200);
   assert.deepEqual(pullBody.payload, encryptedPayload);
 });
+
+test('连续上传始终从固定 latest 读取最后一次成功上传的数据', async () => {
+  const bucket = createBucket();
+  const env = { BACKUP_TOKEN: token, BACKUP_BUCKET: bucket };
+  const newerPayload = { ...encryptedPayload, ciphertext: 'newer-ciphertext' };
+
+  await worker.fetch(post('/sync', {
+    app: 'DentalClinicManager',
+    action: 'push',
+    payload: encryptedPayload
+  }), env);
+  await worker.fetch(post('/sync', {
+    app: 'DentalClinicManager',
+    action: 'push',
+    payload: newerPayload
+  }), env);
+
+  const pullResponse = await worker.fetch(post('/sync', {
+    app: 'DentalClinicManager',
+    action: 'pull'
+  }), env);
+  const pullBody = await pullResponse.json() as { payload: typeof newerPayload };
+  const historyKeys = [...bucket.objects.keys()].filter(key => key.startsWith('sync/history/'));
+
+  assert.deepEqual(pullBody.payload, newerPayload);
+  assert.equal(bucket.objects.get('sync/latest.json'), JSON.stringify(newerPayload));
+  assert.equal(historyKeys.length, 2);
+});

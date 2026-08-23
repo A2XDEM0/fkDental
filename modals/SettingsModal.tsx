@@ -1,12 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Check, Download, Edit2, ExternalLink, Plus, RefreshCw, Save, Settings, Trash2, Upload, X } from 'lucide-react';
-import { APP_VERSION } from '../constants';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { BarChart3, Check, CircleDollarSign, Edit2, Plus, Save, Settings, Trash2, Upload, X } from 'lucide-react';
 import { clinicService } from '../services/clinicService';
-import { ImportPreview, ReleaseCheckResult, TreatmentCategory, TreatmentItem } from '../types';
+import { Patient, TreatmentCategory, TreatmentItem } from '../types';
 import { Button } from '../components/Button';
 import { ModalBase } from './ModalBase';
-import { ConfirmationModal } from './ConfirmationModal';
-import { getErrorStatusClass, getSuccessStatusClass } from '../utils/statusStyles';
+import { buildReportStats } from '../features/reports/reportStats';
+import { REPORT_AXIS_SCALE_LABELS, ReportAxisScale, ReportChartSettings } from '../features/reports/reportSettings';
 
 const normalizeCloudServiceUrl = (value: string) => value.trim().replace(/\/(backup|sync)\/?$/i, '').replace(/\/+$/, '');
 
@@ -14,9 +13,73 @@ const createCloudEndpoint = (serviceUrl: string, path: 'backup' | 'sync') => (
   `${normalizeCloudServiceUrl(serviceUrl)}/${path}`
 );
 
-export const SettingsModal = ({ onClose, onRefresh, currentClinicName }: { onClose: () => void, onRefresh: () => void, currentClinicName: string }) => {
-  const [tab, setTab] = useState<'data' | 'catalog'>('data');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+const currencyFormatter = new Intl.NumberFormat('zh-CN', {
+  style: 'currency',
+  currency: 'CNY',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2
+});
+
+const formatCurrency = (value: number) => currencyFormatter.format(value);
+
+const ScalePicker = ({
+  title,
+  value,
+  onChange
+}: {
+  title: string;
+  value: ReportAxisScale;
+  onChange: (value: ReportAxisScale) => void;
+}) => {
+  const options: ReportAxisScale[] = ['linear', 'log', 'power'];
+
+  return (
+    <fieldset>
+      <legend className="mb-3 text-base font-bold text-slate-800">{title}</legend>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {options.map(option => (
+          <label
+            key={option}
+            className={`cursor-pointer rounded-xl border p-4 transition-colors ${
+              value === option
+                ? 'border-teal-500 bg-teal-50 ring-1 ring-teal-500'
+                : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <input
+                type="radio"
+                name={title}
+                value={option}
+                checked={value === option}
+                onChange={() => onChange(option)}
+                className="h-4 w-4 border-slate-300 text-teal-600 focus:ring-teal-500"
+              />
+              <span className="font-bold text-slate-800">{REPORT_AXIS_SCALE_LABELS[option]}</span>
+            </div>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+};
+
+export const SettingsModal = ({
+  onClose,
+  onRefresh,
+  currentClinicName,
+  patients,
+  reportChartSettings,
+  onReportChartSettingsChange
+}: {
+  onClose: () => void;
+  onRefresh: () => void;
+  currentClinicName: string;
+  patients: Patient[];
+  reportChartSettings: ReportChartSettings;
+  onReportChartSettingsChange: (settings: ReportChartSettings) => void;
+}) => {
+  const [tab, setTab] = useState<'data' | 'reports' | 'catalog'>('data');
   const isMountedRef = useRef(true);
   const [clinicNameForm, setClinicNameForm] = useState(currentClinicName);
   const [cloudServiceSettings, setCloudServiceSettings] = useState(() => {
@@ -28,18 +91,9 @@ export const SettingsModal = ({ onClose, onRefresh, currentClinicName }: { onClo
     };
   });
   const [cloudStatus, setCloudStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-  const [isSendingBackup, setIsSendingBackup] = useState(false);
   const [isPullingCloud, setIsPullingCloud] = useState(false);
   const [isPushingCloud, setIsPushingCloud] = useState(false);
-  const [releaseSettings, setReleaseSettings] = useState(clinicService.getReleaseSettings());
-  const [releaseStatus, setReleaseStatus] = useState<ReleaseCheckResult | null>(null);
-  const [isCheckingRelease, setIsCheckingRelease] = useState(false);
-  const [pendingImportContent, setPendingImportContent] = useState<string | null>(null);
-  const [pendingImportPreview, setPendingImportPreview] = useState<ImportPreview | null>(null);
-  const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
-  const [importStatus, setImportStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [hasPreImportBackup, setHasPreImportBackup] = useState(clinicService.hasPreImportBackup());
-  const [storageStatus] = useState(clinicService.getStorageStatus());
+  const reportStats = useMemo(() => buildReportStats(patients), [patients]);
 
   // 处置目录直接影响新增处置时的默认价格。
   const [catalog, setCatalog] = useState<TreatmentCategory[]>(clinicService.getCatalog());
@@ -75,30 +129,6 @@ export const SettingsModal = ({ onClose, onRefresh, currentClinicName }: { onClo
     return { backupSettings, syncSettings };
   };
 
-  const handleSaveCloudServiceSettings = () => {
-    if (!saveCloudServiceSettings()) {
-      setCloudStatus({ type: 'error', message: '请填写云端服务地址和访问密钥。' });
-      return;
-    }
-    setCloudStatus({ type: 'success', message: '云端配置已保存，备份与同步将共用此地址和密钥。' });
-  };
-
-  const handleSendBackup = async () => {
-    setIsSendingBackup(true);
-    setCloudStatus(null);
-    const settings = saveCloudServiceSettings();
-    if (!settings) {
-      setCloudStatus({ type: 'error', message: '请填写云端服务地址和访问密钥。' });
-      setIsSendingBackup(false);
-      return;
-    }
-    const { backupSettings } = settings;
-    const result = await clinicService.sendBackupToServer(backupSettings);
-    if (!isMountedRef.current) return;
-    setCloudStatus({ type: result.success ? 'success' : 'error', message: result.message });
-    setIsSendingBackup(false);
-  };
-
   const handlePullCloudData = async () => {
     if (!confirm('从云端同步会覆盖本机数据，确定继续吗？')) return;
     setIsPullingCloud(true);
@@ -117,7 +147,7 @@ export const SettingsModal = ({ onClose, onRefresh, currentClinicName }: { onClo
     setIsPullingCloud(false);
   };
 
-  const handlePushCloudData = async () => {
+  const handleUploadBackup = async () => {
     setIsPushingCloud(true);
     setCloudStatus(null);
     const settings = saveCloudServiceSettings();
@@ -131,91 +161,6 @@ export const SettingsModal = ({ onClose, onRefresh, currentClinicName }: { onClo
     if (!isMountedRef.current) return;
     setCloudStatus({ type: result.success ? 'success' : 'error', message: result.message });
     setIsPushingCloud(false);
-  };
-
-  const handleSaveReleaseSettings = () => {
-    clinicService.updateReleaseSettings(releaseSettings);
-    setReleaseStatus({
-      success: true,
-      updateAvailable: false,
-      currentVersion: APP_VERSION,
-      message: '更新接口配置已保存。'
-    });
-  };
-
-  const handleCheckRelease = async (settings = releaseSettings) => {
-    setIsCheckingRelease(true);
-    clinicService.updateReleaseSettings(settings);
-    const result = await clinicService.checkLatestRelease(settings);
-    if (!isMountedRef.current) return;
-    setReleaseStatus(result);
-    setIsCheckingRelease(false);
-  };
-
-  useEffect(() => {
-    if (releaseSettings.autoCheck) {
-      handleCheckRelease(releaseSettings);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleExport = () => {
-    const dataStr = clinicService.exportData();
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileDefaultName = `dental_clinic_backup_${new Date().toISOString().slice(0,10)}.json`;
-
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  };
-
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fileReader = new FileReader();
-    if (e.target.files && e.target.files.length > 0) {
-      fileReader.readAsText(e.target.files[0], "UTF-8");
-      fileReader.onload = (event) => {
-        if (event.target?.result) {
-          setImportStatus(null);
-          const content = event.target.result as string;
-          const result = clinicService.createImportPreview(content);
-          if (!result.success || !result.preview) {
-            setPendingImportContent(null);
-            setPendingImportPreview(null);
-            setImportStatus({ type: 'error', message: result.message });
-            return;
-          }
-          setPendingImportContent(content);
-          setPendingImportPreview(result.preview);
-          setImportStatus({ type: 'success', message: result.message });
-        }
-      };
-    }
-    e.target.value = '';
-  };
-
-  const confirmImport = async () => {
-    if (!pendingImportContent) return;
-    const result = await clinicService.importData(pendingImportContent);
-    setPendingImportContent(null);
-    setPendingImportPreview(null);
-    setImportStatus({ type: result.success ? 'success' : 'error', message: result.message });
-    if (result.success) {
-      setHasPreImportBackup(clinicService.hasPreImportBackup());
-      onRefresh();
-    }
-  };
-
-  const cancelImportPreview = () => {
-    setPendingImportContent(null);
-    setPendingImportPreview(null);
-  };
-
-  const confirmRestorePreImportBackup = async () => {
-    const result = await clinicService.restorePreImportBackup();
-    setShowRestoreConfirm(false);
-    setImportStatus({ type: result.success ? 'success' : 'error', message: result.message });
-    if (result.success) onRefresh();
   };
 
   // 目录维护逻辑：先在弹窗本地编辑，点击保存后统一写入本地数据。
@@ -297,125 +242,15 @@ export const SettingsModal = ({ onClose, onRefresh, currentClinicName }: { onClo
   };
 
   return (
-    <ModalBase title="系统设置" onClose={onClose} size="lg">
-      <div className="flex gap-6 mb-8 border-b border-slate-200">
+    <ModalBase title="系统设置" onClose={onClose} size="2xl">
+      <div className="mb-8 flex flex-wrap gap-x-6 gap-y-3 border-b border-slate-200">
         <button onClick={() => setTab('data')} className={`pb-3 px-2 text-lg font-medium transition-colors ${tab === 'data' ? 'border-b-2 border-teal-600 text-teal-800' : 'text-slate-500 hover:text-slate-700'}`}>通用与数据</button>
+        <button onClick={() => setTab('reports')} className={`pb-3 px-2 text-lg font-medium transition-colors ${tab === 'reports' ? 'border-b-2 border-teal-600 text-teal-800' : 'text-slate-500 hover:text-slate-700'}`}>统计与收入</button>
         <button onClick={() => setTab('catalog')} className={`pb-3 px-2 text-lg font-medium transition-colors ${tab === 'catalog' ? 'border-b-2 border-teal-600 text-teal-800' : 'text-slate-500 hover:text-slate-700'}`}>处置项目管理</button>
       </div>
 
       {tab === 'data' && (
         <div className="space-y-8">
-          <div className="bg-slate-50 p-8 rounded-xl border border-slate-200">
-            {importStatus && (
-              <div className={`mb-4 rounded-lg border px-4 py-3 text-base ${
-                importStatus.type === 'success' ? getSuccessStatusClass() : getErrorStatusClass()
-              }`}>
-                {importStatus.message}
-              </div>
-            )}
-            <input
-              type="file"
-              accept=".json"
-              ref={fileInputRef}
-              style={{ display: 'none' }}
-              onChange={handleImport}
-            />
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <Button onClick={handleExport} size="lg" className="min-h-16 w-full gap-2">
-                <Download size={21} aria-hidden="true" />
-                <span>导出备份文件</span>
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => fileInputRef.current?.click()}
-                size="lg"
-                className="min-h-16 w-full gap-2"
-              >
-                <Upload size={21} aria-hidden="true" />
-                <span>选择文件导入</span>
-              </Button>
-              {hasPreImportBackup ? (
-                <Button
-                  variant="danger"
-                  onClick={() => setShowRestoreConfirm(true)}
-                  size="lg"
-                  className="min-h-16 w-full gap-2"
-                >
-                  <RefreshCw size={21} aria-hidden="true" />
-                  <span>恢复之前备份</span>
-                </Button>
-              ) : (
-                <Button variant="secondary" size="lg" className="min-h-16 w-full gap-2" disabled>
-                  <RefreshCw size={21} aria-hidden="true" />
-                  <span>暂无可恢复备份</span>
-                </Button>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-slate-50 p-8 rounded-xl border border-slate-200">
-            <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2 text-lg">
-              <RefreshCw size={24} className="text-teal-600" /> 应用更新
-            </h4>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-slate-600 mb-2 font-medium">GitHub Release 接口</label>
-                <input
-                  className="w-full border border-slate-300 rounded-lg px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-teal-500"
-                  value={releaseSettings.endpoint}
-                  onChange={e => {
-                    setReleaseSettings({ ...releaseSettings, endpoint: e.target.value });
-                    setReleaseStatus(null);
-                  }}
-                />
-              </div>
-              <label className="inline-flex items-center gap-3 text-slate-700 font-medium">
-                <input
-                  type="checkbox"
-                  className="h-5 w-5 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-                  checked={releaseSettings.autoCheck}
-                  onChange={e => {
-                    const next = { ...releaseSettings, autoCheck: e.target.checked };
-                    setReleaseSettings(next);
-                    clinicService.updateReleaseSettings(next);
-                  }}
-                />
-                打开设置时自动检测
-              </label>
-              {releaseStatus && (
-                <div className={`rounded-lg border px-4 py-3 text-base ${
-                  releaseStatus.success
-                    ? releaseStatus.updateAvailable
-                      ? 'border-amber-200 bg-amber-50 text-amber-800'
-                      : 'border-teal-200 bg-teal-50 text-teal-800'
-                    : 'border-red-200 bg-red-50 text-red-700'
-                }`}>
-                  <div className="font-bold">{releaseStatus.message}</div>
-                  <div className="mt-1 text-sm opacity-80">
-                    当前 v{releaseStatus.currentVersion}
-                    {releaseStatus.latestVersion ? ` · 最新 v${releaseStatus.latestVersion}` : ''}
-                  </div>
-                  {releaseStatus.releaseUrl && (
-                    <a
-                      href={releaseStatus.releaseUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-3 inline-flex items-center gap-1 font-bold underline underline-offset-2"
-                    >
-                      打开 Release <ExternalLink size={15} />
-                    </a>
-                  )}
-                </div>
-              )}
-              <div className="flex flex-wrap gap-3">
-                <Button onClick={handleSaveReleaseSettings} variant="secondary" size="lg">保存更新接口</Button>
-                <Button onClick={() => handleCheckRelease()} size="lg" disabled={isCheckingRelease}>
-                  {isCheckingRelease ? '检测中...' : '立即检测更新'}
-                </Button>
-              </div>
-            </div>
-          </div>
-
           <div className="bg-slate-50 p-8 rounded-xl border border-slate-200">
             <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2 text-lg">
               <Upload size={24} className="text-teal-600" /> 云端数据
@@ -456,15 +291,11 @@ export const SettingsModal = ({ onClose, onRefresh, currentClinicName }: { onClo
                 </div>
               )}
               <div className="flex flex-wrap gap-3">
-                <Button onClick={handleSaveCloudServiceSettings} variant="secondary" size="lg">保存云端配置</Button>
-                <Button onClick={handleSendBackup} size="lg" disabled={isSendingBackup || isPullingCloud || isPushingCloud}>
-                  {isSendingBackup ? '备份中...' : '创建历史备份'}
+                <Button onClick={handleUploadBackup} size="lg" disabled={isPullingCloud || isPushingCloud}>
+                  {isPushingCloud ? '上传中...' : '上传备份'}
                 </Button>
-                <Button onClick={handlePullCloudData} size="lg" disabled={isSendingBackup || isPullingCloud || isPushingCloud}>
-                  {isPullingCloud ? '同步中...' : '从云端同步'}
-                </Button>
-                <Button onClick={handlePushCloudData} variant="secondary" size="lg" disabled={isSendingBackup || isPullingCloud || isPushingCloud}>
-                  {isPushingCloud ? '上传中...' : '上传本机数据'}
+                <Button onClick={handlePullCloudData} variant="secondary" size="lg" disabled={isPullingCloud || isPushingCloud}>
+                  {isPullingCloud ? '同步中...' : '云端同步'}
                 </Button>
               </div>
             </div>
@@ -481,6 +312,113 @@ export const SettingsModal = ({ onClose, onRefresh, currentClinicName }: { onClo
               <Button onClick={handleSaveClinicName} size="lg">保存名称</Button>
             </div>
           </div>
+        </div>
+      )}
+
+      {tab === 'reports' && (
+        <div className="space-y-8">
+          <section className="rounded-xl border border-slate-200 bg-slate-50 p-5 sm:p-7">
+            <div className="mb-6 flex items-start gap-3">
+              <div className="rounded-lg bg-teal-100 p-2 text-teal-700">
+                <BarChart3 size={22} />
+              </div>
+              <div>
+                <h4 className="text-lg font-bold text-slate-900">折线图坐标关系</h4>
+              </div>
+            </div>
+
+            <div className="space-y-7">
+              <ScalePicker
+                title="横轴（日期）"
+                value={reportChartSettings.xScale}
+                onChange={xScale => onReportChartSettingsChange({ ...reportChartSettings, xScale })}
+              />
+              <ScalePicker
+                title="纵轴（金额 / 客流）"
+                value={reportChartSettings.yScale}
+                onChange={yScale => onReportChartSettingsChange({ ...reportChartSettings, yScale })}
+              />
+
+              {(reportChartSettings.xScale === 'power' || reportChartSettings.yScale === 'power') && (
+                <div className="max-w-sm rounded-xl border border-violet-200 bg-violet-50 p-4">
+                  <label className="block font-bold text-violet-900" htmlFor="report-power-exponent">幂函数指数</label>
+                  <div className="mt-3 flex items-center gap-3">
+                    <input
+                      id="report-power-exponent"
+                      type="range"
+                      min="0.1"
+                      max="5"
+                      step="0.1"
+                      value={reportChartSettings.powerExponent}
+                      onChange={event => {
+                        const powerExponent = Number(event.target.value);
+                        if (Number.isFinite(powerExponent)) {
+                          onReportChartSettingsChange({ ...reportChartSettings, powerExponent });
+                        }
+                      }}
+                      className="h-2 flex-1 cursor-pointer accent-violet-600"
+                    />
+                    <output className="min-w-14 rounded-lg bg-white px-3 py-2 text-center text-lg font-bold text-violet-900 shadow-sm">
+                      {reportChartSettings.powerExponent.toFixed(1)}
+                    </output>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div className="flex flex-col gap-4 border-b border-slate-100 bg-slate-50 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+              <div className="flex items-start gap-3">
+                <div className="rounded-lg bg-violet-100 p-2 text-violet-700">
+                  <CircleDollarSign size={22} />
+                </div>
+                <div>
+                  <h4 className="text-lg font-bold text-slate-900">总收入明细</h4>
+                </div>
+              </div>
+              <div className="text-left sm:text-right">
+                <div className="text-sm font-medium text-slate-500">{reportStats.revenueDetails.length} 条处置收费</div>
+                <div className="mt-1 text-2xl font-bold text-violet-700">{formatCurrency(reportStats.totalRevenue)}</div>
+              </div>
+            </div>
+
+            {reportStats.revenueDetails.length === 0 ? (
+              <div className="px-6 py-14 text-center text-slate-400">暂无收入明细</div>
+            ) : (
+              <div className="max-h-[52vh] overflow-auto">
+                <table className="w-full min-w-[760px] text-left">
+                  <thead className="sticky top-0 z-10 bg-slate-100 text-sm font-bold text-slate-500 shadow-sm">
+                    <tr>
+                      <th className="px-5 py-3">日期</th>
+                      <th className="px-5 py-3">患者</th>
+                      <th className="px-5 py-3">电话</th>
+                      <th className="px-5 py-3">处置项目</th>
+                      <th className="px-5 py-3 text-right">金额</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {reportStats.revenueDetails.map(detail => (
+                      <tr key={detail.key} className="hover:bg-violet-50/40">
+                        <td className="whitespace-nowrap px-5 py-4 font-mono text-slate-600">
+                          <div className="flex items-center gap-2">
+                            <span>{detail.date || '未填写'}</span>
+                            {!detail.includedInChart && (
+                              <span className="rounded-full bg-amber-100 px-2 py-0.5 font-sans text-xs font-bold text-amber-700">未纳入折线</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 font-bold text-slate-900">{detail.patientName}</td>
+                        <td className="whitespace-nowrap px-5 py-4 font-mono text-slate-500">{detail.phone || '未填写'}</td>
+                        <td className="px-5 py-4 text-slate-700">{detail.item}</td>
+                        <td className="whitespace-nowrap px-5 py-4 text-right font-mono font-bold text-violet-700">{formatCurrency(detail.revenue)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
         </div>
       )}
 
@@ -560,97 +498,6 @@ export const SettingsModal = ({ onClose, onRefresh, currentClinicName }: { onClo
         </div>
       )}
 
-      {pendingImportContent && pendingImportPreview && (
-        <ModalBase title="导入预览" onClose={cancelImportPreview} size="lg">
-          <div className="space-y-6">
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900">
-              <div className="font-bold text-lg">确认后将覆盖当前本机数据</div>
-              <div className="mt-1 text-sm leading-6">
-                导入文件已完成迁移和结构校验。系统会在写入前保存导入前备份，但覆盖后的数据不能通过普通撤销恢复。
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="text-sm text-slate-500">当前诊所</div>
-                <div className="mt-1 font-bold text-slate-800">{pendingImportPreview.currentClinicName}</div>
-              </div>
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="text-sm text-slate-500">导入后诊所</div>
-                <div className="mt-1 font-bold text-slate-800">{pendingImportPreview.incomingClinicName}</div>
-              </div>
-            </div>
-
-            <div className="overflow-hidden rounded-lg border border-slate-200">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3">数据项</th>
-                    <th className="px-4 py-3">当前</th>
-                    <th className="px-4 py-3">导入后</th>
-                    <th className="px-4 py-3 text-teal-700">新增</th>
-                    <th className="px-4 py-3 text-amber-700">覆盖</th>
-                    <th className="px-4 py-3 text-red-700">移除</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
-                  {pendingImportPreview.metrics.map(metric => (
-                    <tr key={metric.label}>
-                      <td className="px-4 py-3 font-medium text-slate-800">{metric.label}</td>
-                      <td className="px-4 py-3 font-mono text-slate-600">{metric.current}</td>
-                      <td className="px-4 py-3 font-mono text-slate-600">{metric.incoming}</td>
-                      <td className="px-4 py-3 font-mono text-teal-700">{metric.added}</td>
-                      <td className="px-4 py-3 font-mono text-amber-700">{metric.overwritten}</td>
-                      <td className="px-4 py-3 font-mono text-red-700">{metric.removed}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { title: '新增患者示例', items: pendingImportPreview.samples.addedPatients },
-                { title: '覆盖患者示例', items: pendingImportPreview.samples.overwrittenPatients },
-                { title: '移除患者示例', items: pendingImportPreview.samples.removedPatients }
-              ].map(group => (
-                <div key={group.title} className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                  <div className="font-bold text-slate-700">{group.title}</div>
-                  {group.items.length > 0 ? (
-                    <ul className="mt-2 space-y-1 text-sm text-slate-600">
-                      {group.items.map(item => <li key={item} className="truncate">{item}</li>)}
-                    </ul>
-                  ) : (
-                    <div className="mt-2 text-sm text-slate-400">无</div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="rounded-lg border border-slate-200 bg-white px-4 py-3">
-              <div className="font-bold text-slate-700">风险提示</div>
-              <ul className="mt-2 space-y-1 text-sm text-slate-600">
-                {pendingImportPreview.warnings.map(warning => <li key={warning}>{warning}</li>)}
-              </ul>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-2">
-              <Button variant="secondary" onClick={cancelImportPreview} size="lg">取消</Button>
-              <Button variant="danger" onClick={confirmImport} size="lg">确认覆盖导入</Button>
-            </div>
-          </div>
-        </ModalBase>
-      )}
-
-      {showRestoreConfirm && (
-        <ConfirmationModal
-          title="恢复导入前备份确认"
-          message="恢复导入前备份会覆盖当前本机数据，并写回当前主存储。此操作不能通过普通撤销恢复，建议先导出当前数据后再继续。"
-          confirmLabel="确认恢复备份"
-          onConfirm={confirmRestorePreImportBackup}
-          onCancel={() => setShowRestoreConfirm(false)}
-        />
-      )}
     </ModalBase>
   );
 };

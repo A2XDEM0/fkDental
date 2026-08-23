@@ -165,11 +165,6 @@ export interface CloudSyncResult {
   message: string;
 }
 
-export interface ReleaseSettings {
-  endpoint: string;
-  autoCheck: boolean;
-}
-
 export interface ReleaseCheckResult {
   success: boolean;
   updateAvailable: boolean;

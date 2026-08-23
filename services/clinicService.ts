@@ -1,5 +1,5 @@
-import { ClinicData, Patient, GlobalAppointment, TreatmentCategory, TreatmentItem, AppointmentStatus, BackupSettings, BackupPayload, ReleaseSettings, ReleaseCheckResult, CloudSyncSettings, CloudSyncResult, TreatmentRecord, ImportPreview, ImportPreviewMetric, ImportPreviewResult, PatientListItem, PatientListPage, PatientListQuery, PatientActivityType, PlannedTreatment, ScheduleSource, VisitType } from '../types';
-import { STORAGE_KEY, BACKUP_SETTINGS_KEY, CLOUD_SYNC_SETTINGS_KEY, RELEASE_SETTINGS_KEY, DEFAULT_CATALOG, DATA_VERSION, APP_VERSION, DEFAULT_RELEASE_API_URL } from '../constants';
+import { ClinicData, Patient, GlobalAppointment, TreatmentCategory, TreatmentItem, AppointmentStatus, BackupSettings, BackupPayload, ReleaseCheckResult, CloudSyncSettings, CloudSyncResult, TreatmentRecord, ImportPreview, ImportPreviewMetric, ImportPreviewResult, PatientListItem, PatientListPage, PatientListQuery, PatientActivityType, PlannedTreatment, ScheduleSource, VisitType } from '../types';
+import { STORAGE_KEY, BACKUP_SETTINGS_KEY, CLOUD_SYNC_SETTINGS_KEY, DEFAULT_CATALOG, DATA_VERSION, APP_VERSION, DEFAULT_RELEASE_API_URL, RELEASES_URL } from '../constants';
 import { createAppointmentId, migrateClinicData, validateClinicData } from './dataMigrations';
 import { ElectronSqliteStore } from './storage/electronSqliteStore';
 import { LocalStorageStore } from './storage/localStorageStore';
@@ -646,7 +646,7 @@ class ClinicService {
       }
       this.data = migrated;
       await this.saveDataAsync();
-      return { success: true, message: '已从云端同步数据。' };
+      return { success: true, message: '已从云端最新备份同步数据。' };
     } catch (e) {
       const message = e instanceof DOMException && e.name === 'AbortError'
         ? '云端同步超时，请稍后再试。'
@@ -687,7 +687,7 @@ class ClinicService {
         return { success: false, message: `服务器返回 ${response.status} ${response.statusText || ''}`.trim() };
       }
 
-      return { success: true, message: '本机数据已加密上传到云端。' };
+      return { success: true, message: '备份已加密上传到云端，并保留了历史版本。' };
     } catch (e) {
       const message = e instanceof DOMException && e.name === 'AbortError'
         ? '云端上传超时，请稍后再试。'
@@ -698,57 +698,12 @@ class ClinicService {
     }
   }
 
-  getReleaseSettings(): ReleaseSettings {
-    const stored = localStorage.getItem(RELEASE_SETTINGS_KEY);
-    if (!stored) return { endpoint: DEFAULT_RELEASE_API_URL, autoCheck: true };
-    try {
-      const parsed = JSON.parse(stored);
-      return {
-        endpoint: typeof parsed.endpoint === 'string' && parsed.endpoint.trim() ? parsed.endpoint : DEFAULT_RELEASE_API_URL,
-        autoCheck: typeof parsed.autoCheck === 'boolean' ? parsed.autoCheck : true
-      };
-    } catch (e) {
-      console.error('Failed to parse release settings', e);
-      return { endpoint: DEFAULT_RELEASE_API_URL, autoCheck: true };
-    }
-  }
-
-  updateReleaseSettings(settings: ReleaseSettings) {
-    localStorage.setItem(RELEASE_SETTINGS_KEY, JSON.stringify({
-      endpoint: settings.endpoint.trim() || DEFAULT_RELEASE_API_URL,
-      autoCheck: settings.autoCheck
-    }));
-  }
-
-  async checkLatestRelease(settings: ReleaseSettings): Promise<ReleaseCheckResult> {
-    const endpoint = settings.endpoint.trim();
-    if (!endpoint) {
-      return {
-        success: false,
-        updateAvailable: false,
-        currentVersion: APP_VERSION,
-        message: '请先填写 GitHub Release 接口地址。'
-      };
-    }
-
-    let url: URL;
-    try {
-      url = new URL(endpoint);
-      if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Invalid protocol');
-    } catch {
-      return {
-        success: false,
-        updateAvailable: false,
-        currentVersion: APP_VERSION,
-        message: 'Release 接口地址格式不正确。'
-      };
-    }
-
+  async checkLatestRelease(): Promise<ReleaseCheckResult> {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), 12000);
 
     try {
-      const response = await fetch(url.toString(), {
+      const response = await fetch(DEFAULT_RELEASE_API_URL, {
         headers: { Accept: 'application/vnd.github+json' },
         signal: controller.signal
       });
@@ -780,14 +735,14 @@ class ClinicService {
         currentVersion: APP_VERSION,
         latestVersion,
         releaseName: release?.name || release?.tag_name,
-        releaseUrl: release?.html_url,
+        releaseUrl: release?.html_url || RELEASES_URL,
         publishedAt: release?.published_at,
         message: updateAvailable ? `发现新版本 v${latestVersion}` : '当前已是最新版本。'
       };
     } catch (e) {
       const message = e instanceof DOMException && e.name === 'AbortError'
         ? '检查超时，请稍后再试。'
-        : '检查失败，请确认网络、接口地址和 GitHub 访问。';
+        : '检查失败，请确认网络和 GitHub 访问。';
       return {
         success: false,
         updateAvailable: false,
@@ -797,6 +752,15 @@ class ClinicService {
     } finally {
       window.clearTimeout(timeoutId);
     }
+  }
+
+  private releaseCheckPromise: Promise<ReleaseCheckResult> | null = null;
+
+  checkLatestReleaseOnce(): Promise<ReleaseCheckResult> {
+    if (!this.releaseCheckPromise) {
+      this.releaseCheckPromise = this.checkLatestRelease();
+    }
+    return this.releaseCheckPromise;
   }
 
   async sendBackupToServer(settings: BackupSettings): Promise<{ success: boolean; message: string }> {
