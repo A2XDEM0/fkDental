@@ -282,6 +282,11 @@ npm run package:linux
 
 各平台安装包应在对应平台或支持的交叉构建环境中生成。
 
+## 贡献者与致谢
+
+- **OpenAI Codex** — 项目作者与维护者
+- **我** — 写prompt协助AI
+
 ## 数据安全与许可
 
 - 正式安装版使用 SQLite 保存数据，敏感字段通过 Electron `safeStorage` 借助操作系统安全能力加密。
