@@ -7,3 +7,79 @@ body,
 #root {
   height: 100%;
 }
+
+:root {
+  color-scheme: light;
+  --clinic-canvas: #f7f3ec;
+  --clinic-surface: #fffdf9;
+  --clinic-brand: #176b5b;
+  --clinic-brand-deep: #243f3a;
+  --clinic-clay: #d97757;
+  --clinic-sage: #8faf9f;
+  --chart-revenue: #176b5b;
+  --chart-revenue-fill: #8faf9f;
+  --chart-traffic: #477b91;
+  --chart-traffic-fill: #a8c5d0;
+  --chart-average: #d97757;
+  --chart-average-fill: #efa889;
+  --chart-grid: #e3d9cc;
+  --chart-grid-strong: #9a9187;
+  --chart-band: #faf7f1;
+  --calendar-today: #d97757;
+  --calendar-activity: #176b5b;
+}
+
+body {
+  margin: 0;
+  background: var(--clinic-canvas);
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: #bfd8cc;
+  color: #103b34;
+}
+
+.report-chart-scrollbar {
+  scrollbar-color: #6e9380 #efe8de;
+  scrollbar-gutter: stable;
+  scrollbar-width: auto;
+}
+
+.report-chart-scrollbar::-webkit-scrollbar {
+  height: 14px;
+}
+
+.report-chart-scrollbar::-webkit-scrollbar-track {
+  background: #efe8de;
+  border-top: 1px solid #e3d9cc;
+}
+
+.report-chart-scrollbar::-webkit-scrollbar-thumb {
+  min-width: 64px;
+  border: 3px solid #efe8de;
+  border-radius: 999px;
+  background: #6e9380;
+}
+
+.report-chart-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #176b5b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

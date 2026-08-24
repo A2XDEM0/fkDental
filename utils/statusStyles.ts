@@ -10,7 +10,7 @@ export const getAppointmentStatusLabel = (status: AppointmentStatus) => {
 export const getAppointmentStatusClass = (status: AppointmentStatus) => {
   if (status === 'arrived') return 'bg-blue-100 text-blue-700 hover:bg-blue-200';
   if (status === 'completed') return 'bg-green-100 text-green-700 hover:bg-green-200';
-  if (status === 'cancelled') return 'bg-rose-100 text-rose-700 hover:bg-rose-200';
+  if (status === 'cancelled') return 'bg-slate-100 text-slate-600 hover:bg-slate-200';
   return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
 };
 

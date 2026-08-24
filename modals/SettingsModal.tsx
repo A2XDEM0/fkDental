@@ -340,8 +340,8 @@ export const SettingsModal = ({
               />
 
               {(reportChartSettings.xScale === 'power' || reportChartSettings.yScale === 'power') && (
-                <div className="max-w-sm rounded-xl border border-violet-200 bg-violet-50 p-4">
-                  <label className="block font-bold text-violet-900" htmlFor="report-power-exponent">幂函数指数</label>
+                <div className="max-w-sm rounded-xl border border-clay-200 bg-clay-50 p-4">
+                  <label className="block font-bold text-clay-900" htmlFor="report-power-exponent">幂函数指数</label>
                   <div className="mt-3 flex items-center gap-3">
                     <input
                       id="report-power-exponent"
@@ -356,9 +356,9 @@ export const SettingsModal = ({
                           onReportChartSettingsChange({ ...reportChartSettings, powerExponent });
                         }
                       }}
-                      className="h-2 flex-1 cursor-pointer accent-violet-600"
+                      className="h-2 flex-1 cursor-pointer accent-clay-600"
                     />
-                    <output className="min-w-14 rounded-lg bg-white px-3 py-2 text-center text-lg font-bold text-violet-900 shadow-sm">
+                    <output className="min-w-14 rounded-lg bg-white px-3 py-2 text-center text-lg font-bold text-clay-900 shadow-sm">
                       {reportChartSettings.powerExponent.toFixed(1)}
                     </output>
                   </div>
@@ -370,7 +370,7 @@ export const SettingsModal = ({
           <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <div className="flex flex-col gap-4 border-b border-slate-100 bg-slate-50 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
               <div className="flex items-start gap-3">
-                <div className="rounded-lg bg-violet-100 p-2 text-violet-700">
+                <div className="rounded-lg bg-clay-100 p-2 text-clay-700">
                   <CircleDollarSign size={22} />
                 </div>
                 <div>
@@ -379,7 +379,7 @@ export const SettingsModal = ({
               </div>
               <div className="text-left sm:text-right">
                 <div className="text-sm font-medium text-slate-500">{reportStats.revenueDetails.length} 条处置收费</div>
-                <div className="mt-1 text-2xl font-bold text-violet-700">{formatCurrency(reportStats.totalRevenue)}</div>
+                <div className="mt-1 text-2xl font-bold text-clay-700">{formatCurrency(reportStats.totalRevenue)}</div>
               </div>
             </div>
 
@@ -399,7 +399,7 @@ export const SettingsModal = ({
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {reportStats.revenueDetails.map(detail => (
-                      <tr key={detail.key} className="hover:bg-violet-50/40">
+                      <tr key={detail.key} className="hover:bg-clay-50/40">
                         <td className="whitespace-nowrap px-5 py-4 font-mono text-slate-600">
                           <div className="flex items-center gap-2">
                             <span>{detail.date || '未填写'}</span>
@@ -411,7 +411,7 @@ export const SettingsModal = ({
                         <td className="px-5 py-4 font-bold text-slate-900">{detail.patientName}</td>
                         <td className="whitespace-nowrap px-5 py-4 font-mono text-slate-500">{detail.phone || '未填写'}</td>
                         <td className="px-5 py-4 text-slate-700">{detail.item}</td>
-                        <td className="whitespace-nowrap px-5 py-4 text-right font-mono font-bold text-violet-700">{formatCurrency(detail.revenue)}</td>
+                        <td className="whitespace-nowrap px-5 py-4 text-right font-mono font-bold text-clay-700">{formatCurrency(detail.revenue)}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -30,7 +30,7 @@ const startOfCalendarGrid = (month: Date) => {
 };
 
 const activityTone = (activity: PatientActivity) => {
-  if (activity.type === 'created') return 'bg-violet-50 text-violet-700';
+  if (activity.type === 'created') return 'bg-clay-50 text-clay-700';
   if (activity.type === 'initial_visit') return 'bg-emerald-50 text-emerald-700';
   if (activity.type === 'follow_up_visit') return 'bg-blue-50 text-blue-700';
   if (activity.type.startsWith('appointment')) return 'bg-amber-50 text-amber-700';
@@ -362,7 +362,7 @@ export const PatientCalendar = ({
                         height: CALENDAR_CELL_SIZE_PX,
                         fontFamily: CALENDAR_FONT_FAMILY,
                         fontSize: CALENDAR_DATE_FONT_SIZE_PX,
-                        ...(isToday ? { backgroundColor: '#29BBF0' } : {})
+                        ...(isToday ? { backgroundColor: 'var(--calendar-today)' } : {})
                       }}
                     >
                       <span className={`flex h-9 w-9 items-center justify-center rounded-full font-bold leading-none ${
@@ -373,7 +373,7 @@ export const PatientCalendar = ({
                       {summaries.length > 0 && (
                         <span
                           className="absolute right-0 top-0 z-20 flex h-4 min-w-4 items-center justify-center px-0.5 text-[9px] font-bold leading-none"
-                          style={{ backgroundColor: '#6395F2', color: '#030329' }}      //这是修改日历格右上角数字颜色的参数
+                          style={{ backgroundColor: 'var(--calendar-activity)', color: '#ffffff' }}
                         >
                           {summaries.length}
                         </span>

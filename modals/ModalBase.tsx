@@ -69,7 +69,7 @@ export const ModalBase = ({
         aria-labelledby={titleId}
         tabIndex={-1}
         onKeyDown={handleKeyDown}
-        className={`bg-white rounded-2xl shadow-2xl w-full overflow-hidden flex flex-col max-h-[calc(100vh-1rem)] sm:max-h-[calc(100vh-2rem)] animate-in fade-in zoom-in duration-200
+        className={`flex max-h-[calc(100vh-1rem)] w-full flex-col overflow-hidden rounded-2xl bg-surface shadow-2xl outline-none ring-1 ring-white/40 focus-visible:ring-2 focus-visible:ring-teal-500 sm:max-h-[calc(100vh-2rem)] animate-in fade-in zoom-in duration-200
           ${size === 'md' ? 'max-w-md' : size === 'lg' ? 'max-w-3xl' : size === 'xl' ? 'max-w-5xl' : 'max-w-[min(1280px,calc(100vw-2rem))]'}`}
       >
         <div className="px-5 sm:px-8 py-4 sm:py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/80 flex-shrink-0 gap-4">

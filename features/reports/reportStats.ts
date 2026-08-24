@@ -6,6 +6,12 @@ export type DailyRevenuePoint = {
   revenue: number;
 };
 
+export type WeeklyRevenuePoint = {
+  weekStart: string;
+  weekEnd: string;
+  revenue: number;
+};
+
 export type DailyTrafficPoint = {
   date: string;
   visits: number;
@@ -28,6 +34,7 @@ export type RevenueDetailRow = {
 
 export type ReportStats = {
   revenueDays: DailyRevenuePoint[];
+  revenueWeeks: WeeklyRevenuePoint[];
   trafficDays: DailyTrafficPoint[];
   totalRevenue: number;
   totalVisits: number;
@@ -66,6 +73,40 @@ const dayNumberToDateKey = (dayNumber: number) => {
   const month = String(date.getUTCMonth() + 1).padStart(2, '0');
   const day = String(date.getUTCDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+};
+
+const getMondayDayNumber = (dayNumber: number) => {
+  const weekday = new Date(dayNumber * DAY_MS).getUTCDay();
+  return dayNumber - ((weekday + 6) % 7);
+};
+
+export const aggregateRevenueByWeek = (days: DailyRevenuePoint[]): WeeklyRevenuePoint[] => {
+  const validDays = days
+    .flatMap(day => {
+      const dayNumber = dateKeyToDayNumber(day.date);
+      return dayNumber === null ? [] : [{ ...day, dayNumber }];
+    })
+    .sort((a, b) => a.dayNumber - b.dayNumber);
+  if (validDays.length === 0) return [];
+
+  const revenueByWeekStart = new Map<number, number>();
+  validDays.forEach(day => {
+    const weekStart = getMondayDayNumber(day.dayNumber);
+    revenueByWeekStart.set(weekStart, (revenueByWeekStart.get(weekStart) || 0) + day.revenue);
+  });
+
+  const firstWeekStart = getMondayDayNumber(validDays[0].dayNumber);
+  const lastObservedDay = validDays[validDays.length - 1].dayNumber;
+  const lastWeekStart = getMondayDayNumber(lastObservedDay);
+  const weeks: WeeklyRevenuePoint[] = [];
+  for (let weekStart = firstWeekStart; weekStart <= lastWeekStart; weekStart += 7) {
+    weeks.push({
+      weekStart: dayNumberToDateKey(weekStart),
+      weekEnd: dayNumberToDateKey(Math.min(weekStart + 6, lastObservedDay)),
+      revenue: revenueByWeekStart.get(weekStart) || 0,
+    });
+  }
+  return weeks;
 };
 
 const enumerateDateKeys = (firstObservedDate: string | undefined, today: string) => {
@@ -179,6 +220,7 @@ export const buildReportStats = (patients: Patient[], now = new Date()): ReportS
     date,
     revenue: revenueByDate.get(date) || 0
   }));
+  const revenueWeeks = aggregateRevenueByWeek(revenueDays);
   const trafficDays = trafficRange.dates.map(date => {
     const counts = trafficByDate.get(date) || { initialVisits: 0, followUpVisits: 0 };
     return {
@@ -191,6 +233,7 @@ export const buildReportStats = (patients: Patient[], now = new Date()): ReportS
 
   return {
     revenueDays,
+    revenueWeeks,
     trafficDays,
     totalRevenue: revenueDetails.reduce((sum, detail) => sum + detail.revenue, 0),
     totalVisits,

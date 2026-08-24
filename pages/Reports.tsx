@@ -18,6 +18,9 @@ const CHART_HEIGHT = 318;
 const PLOT_TOP = 38;
 const PLOT_BOTTOM = 260;
 const Y_AXIS_WIDTH = 78;
+const MIN_SCROLLABLE_PLOT_WIDTH = 1800;
+
+type XAxisUnit = 'day' | 'week';
 
 const currencyFormatter = new Intl.NumberFormat('zh-CN', {
   style: 'currency',
@@ -46,6 +49,11 @@ const formatDateRange = (dates: string[]) => {
   return dates.length === 1 ? dates[0] : `${dates[0]} — ${dates[dates.length - 1]}`;
 };
 
+const formatWeeklyDateRange = (weeks: Array<{ weekStart: string; weekEnd: string }>) => {
+  if (weeks.length === 0) return '';
+  return `${weeks[0].weekStart} — ${weeks[weeks.length - 1].weekEnd}`;
+};
+
 const getMonthLabel = (monthKey: string, width: number) => {
   const [year, month] = monthKey.split('-').map(Number);
   if (width >= 92) return `${year}年${month}月`;
@@ -60,7 +68,8 @@ const LineAreaChart = ({
   formatYAxis,
   emptyMessage,
   hasData,
-  ariaLabel
+  ariaLabel,
+  xAxisUnit = 'day'
 }: {
   dates: string[];
   series: ChartSeries[];
@@ -69,9 +78,11 @@ const LineAreaChart = ({
   emptyMessage: string;
   hasData: boolean;
   ariaLabel: string;
+  xAxisUnit?: XAxisUnit;
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const plotWidth = Math.max(860, dates.length * 8);
+  const pointWidth = xAxisUnit === 'week' ? 64 : 8;
+  const plotWidth = Math.max(MIN_SCROLLABLE_PLOT_WIDTH, Math.max(1, dates.length - 1) * pointWidth + 48);
   const xStart = 12;
   const xEnd = plotWidth - 18;
   const values = series.flatMap(item => item.values).filter(Number.isFinite);
@@ -118,17 +129,18 @@ const LineAreaChart = ({
     });
   }, [dates, mapX, plotWidth]);
 
-  const dayLabels = useMemo(() => {
+  const xAxisLabels = useMemo(() => {
     let lastX = -Infinity;
     return dates.flatMap((date, index) => {
-      const day = Number(date.slice(8, 10));
-      if (![1, 8, 15, 22].includes(day)) return [];
       const x = mapX(index);
-      if (x - lastX < 34) return [];
+      const month = Number(date.slice(5, 7));
+      const day = Number(date.slice(8, 10));
+      if (xAxisUnit === 'day' && ![1, 8, 15, 22].includes(day)) return [];
+      if (x - lastX < (xAxisUnit === 'week' ? 58 : 34)) return [];
       lastX = x;
-      return [{ date, day, x }];
+      return [{ date, text: xAxisUnit === 'week' ? `${month}月${day}日` : `${day}日`, x }];
     });
-  }, [dates, mapX]);
+  }, [dates, mapX, xAxisUnit]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -154,15 +166,15 @@ const LineAreaChart = ({
             <text x="66" y={tick.y + 4} textAnchor="end" className="fill-slate-500 text-[11px] font-medium">
               {formatYAxis(tick.value)}
             </text>
-            <line x1="70" x2="78" y1={tick.y} y2={tick.y} stroke="#cbd5e1" />
+            <line x1="70" x2="78" y1={tick.y} y2={tick.y} stroke="var(--chart-grid)" />
           </g>
         ))}
-        <line x1="77.5" x2="77.5" y1={PLOT_TOP} y2={PLOT_BOTTOM} stroke="#cbd5e1" />
+        <line x1="77.5" x2="77.5" y1={PLOT_TOP} y2={PLOT_BOTTOM} stroke="var(--chart-grid)" />
       </svg>
 
       <div
         ref={scrollRef}
-        className="overflow-x-auto pl-[78px] [scrollbar-color:#cbd5e1_transparent] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal-500"
+        className="report-chart-scrollbar overflow-x-scroll pl-[78px] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal-500"
         role="region"
         tabIndex={0}
         aria-label={`${ariaLabel}，可使用左右方向键横向滚动`}
@@ -181,9 +193,9 @@ const LineAreaChart = ({
                 y="18"
                 width={Math.max(0, band.right - band.left)}
                 height={PLOT_BOTTOM - 18}
-                fill={index % 2 === 0 ? '#ffffff' : '#f8fafc'}
+                fill={index % 2 === 0 ? 'var(--clinic-surface)' : 'var(--chart-band)'}
               />
-              <line x1={band.left} x2={band.left} y1="18" y2={PLOT_BOTTOM} stroke="#cbd5e1" strokeDasharray="3 5" />
+              <line x1={band.left} x2={band.left} y1="18" y2={PLOT_BOTTOM} stroke="var(--chart-grid)" strokeDasharray="3 5" />
               {getMonthLabel(band.month, band.right - band.left) && (
                 <text
                   x={(band.left + band.right) / 2}
@@ -204,7 +216,7 @@ const LineAreaChart = ({
               x2={plotWidth}
               y1={tick.y}
               y2={tick.y}
-              stroke={tick.value === 0 ? '#94a3b8' : '#e2e8f0'}
+              stroke={tick.value === 0 ? 'var(--chart-grid-strong)' : 'var(--chart-grid)'}
               strokeWidth={tick.value === 0 ? 1.2 : 1}
             />
           ))}
@@ -216,7 +228,7 @@ const LineAreaChart = ({
               x2={mapX(index)}
               y1={PLOT_BOTTOM}
               y2={PLOT_BOTTOM + 4}
-              stroke="#cbd5e1"
+              stroke="var(--chart-grid)"
             />
           ))}
 
@@ -225,7 +237,7 @@ const LineAreaChart = ({
               key={`${item.label}-area`}
               d={buildAreaPath(item.values, mapX, mapY)}
               fill={item.fillColor}
-              fillOpacity="0.2"
+              fillOpacity="0.16"
               stroke="none"
             />
           ))}
@@ -272,8 +284,8 @@ const LineAreaChart = ({
             ) : null
           )))}
 
-          <line x1="0" x2={plotWidth} y1={PLOT_BOTTOM} y2={PLOT_BOTTOM} stroke="#cbd5e1" />
-          {dayLabels.map(label => (
+          <line x1="0" x2={plotWidth} y1={PLOT_BOTTOM} y2={PLOT_BOTTOM} stroke="var(--chart-grid)" />
+          {xAxisLabels.map(label => (
             <text
               key={label.date}
               x={label.x}
@@ -281,7 +293,7 @@ const LineAreaChart = ({
               textAnchor="middle"
               className="fill-slate-400 text-[10px]"
             >
-              {label.day}日
+              {label.text}
             </text>
           ))}
         </svg>
@@ -321,7 +333,9 @@ const ChartCard = ({
   formatYAxis,
   emptyMessage,
   hasData,
-  ariaLabel
+  ariaLabel,
+  rangeLabel,
+  xAxisUnit = 'day'
 }: {
   icon: React.ReactNode;
   title: string;
@@ -332,6 +346,8 @@ const ChartCard = ({
   emptyMessage: string;
   hasData: boolean;
   ariaLabel: string;
+  rangeLabel?: string;
+  xAxisUnit?: XAxisUnit;
 }) => (
   <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
     <div className="flex flex-col gap-4 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
@@ -339,7 +355,7 @@ const ChartCard = ({
         <div className="mt-0.5 rounded-xl bg-slate-100 p-2.5 text-slate-700">{icon}</div>
         <div>
           <h2 className="text-xl font-bold text-slate-900">{title}</h2>
-          <p className="mt-1 font-mono text-xs text-slate-400">{formatDateRange(dates)}</p>
+          <p className="mt-1 font-mono text-xs text-slate-400">{rangeLabel || formatDateRange(dates)}</p>
         </div>
       </div>
       <SeriesLegend series={series} />
@@ -352,6 +368,7 @@ const ChartCard = ({
       emptyMessage={emptyMessage}
       hasData={hasData}
       ariaLabel={ariaLabel}
+      xAxisUnit={xAxisUnit}
     />
   </section>
 );
@@ -359,17 +376,20 @@ const ChartCard = ({
 export const Reports = ({ patients, chartSettings }: { patients: Patient[]; chartSettings: ReportChartSettings }) => {
   const stats = useMemo(() => buildReportStats(patients), [patients]);
   const revenueSeries = useMemo<ChartSeries[]>(() => [{
-    label: '每日收入',
-    color: '#8b5cf6',
-    fillColor: '#a78bfa',
-    values: stats.revenueDays.map(day => day.revenue),
-    tooltip: index => `收入 ${formatCurrency(stats.revenueDays[index].revenue)}`
-  }], [stats.revenueDays]);
+    label: '每周收入',
+    color: 'var(--chart-revenue)',
+    fillColor: 'var(--chart-revenue-fill)',
+    values: stats.revenueWeeks.map(week => week.revenue),
+    tooltip: index => {
+      const week = stats.revenueWeeks[index];
+      return `${week.weekStart} 至 ${week.weekEnd} · 收入 ${formatCurrency(week.revenue)}`;
+    }
+  }], [stats.revenueWeeks]);
   const trafficSeries = useMemo<ChartSeries[]>(() => [
     {
       label: '每日客流',
-      color: '#06b6d4',
-      fillColor: '#22d3ee',
+      color: 'var(--chart-traffic)',
+      fillColor: 'var(--chart-traffic-fill)',
       values: stats.trafficDays.map(day => day.visits),
       tooltip: index => {
         const day = stats.trafficDays[index];
@@ -378,8 +398,8 @@ export const Reports = ({ patients, chartSettings }: { patients: Patient[]; char
     },
     {
       label: `平均客流 ${stats.averageDailyVisits.toFixed(1)} 人/日`,
-      color: '#f97316',
-      fillColor: '#fb923c',
+      color: 'var(--chart-average)',
+      fillColor: 'var(--chart-average-fill)',
       values: stats.trafficDays.map(() => stats.averageDailyVisits),
       dashed: true,
       tooltip: () => `区间平均 ${stats.averageDailyVisits.toFixed(2)} 人/日`
@@ -394,19 +414,21 @@ export const Reports = ({ patients, chartSettings }: { patients: Patient[]; char
 
       <div className="space-y-7">
         <ChartCard
-          icon={<TrendingUp size={22} className="text-violet-600" />}
-          title="收入随日期变化"
-          dates={stats.revenueDays.map(day => day.date)}
+          icon={<TrendingUp size={22} className="text-teal-700" />}
+          title="收入随日期变化（按周）"
+          dates={stats.revenueWeeks.map(week => week.weekStart)}
           series={revenueSeries}
           settings={chartSettings}
           formatYAxis={formatRevenueTick}
           emptyMessage="暂无收入记录"
-          hasData={stats.revenueDays.some(day => day.revenue !== 0)}
-          ariaLabel="收入随日期变化折线图"
+          hasData={stats.revenueWeeks.some(week => week.revenue !== 0)}
+          ariaLabel="每周收入变化折线图"
+          rangeLabel={formatWeeklyDateRange(stats.revenueWeeks)}
+          xAxisUnit="week"
         />
 
         <ChartCard
-          icon={<UsersRound size={22} className="text-cyan-600" />}
+          icon={<UsersRound size={22} className="text-clay-600" />}
           title="每日客流与平均客流"
           dates={stats.trafficDays.map(day => day.date)}
           series={trafficSeries}

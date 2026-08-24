@@ -24,36 +24,37 @@ export const Dashboard = ({ patients, onViewChange, onPatientClick, onRefresh }:
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto w-full">
+    <div className="mx-auto w-full max-w-7xl p-8">
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">诊所概况</h1>
         <p className="text-slate-500 mt-2 text-lg">欢迎回来，今天 {today} 的工作安排如下</p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow cursor-pointer" onClick={() => onViewChange('patients')}>
+      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-200 border-t-4 border-t-teal-500 bg-surface p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-clinic" onClick={() => onViewChange('patients')}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-slate-500 font-medium text-lg">总患者数</h3>
-            <Users className="text-teal-600 bg-teal-50 p-2 rounded-lg w-10 h-10" />
+            <Users className="h-10 w-10 rounded-xl bg-teal-100 p-2 text-teal-700 transition-transform group-hover:scale-105" />
           </div>
           <p className="text-5xl font-bold text-slate-900">{patients.length}</p>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow cursor-pointer" onClick={() => onViewChange('schedule')}>
+        <div className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-200 border-t-4 border-t-clay-400 bg-surface p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-clinic" onClick={() => onViewChange('schedule')}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-slate-500 font-medium text-lg">今日预约</h3>
-            <Calendar className="text-blue-600 bg-blue-50 p-2 rounded-lg w-10 h-10" />
+            <Calendar className="h-10 w-10 rounded-xl bg-clay-100 p-2 text-clay-700 transition-transform group-hover:scale-105" />
           </div>
           <p className="text-5xl font-bold text-slate-900">{todayAppts.length}</p>
         </div>
 
-        <div className="bg-gradient-to-br from-teal-500 to-emerald-600 p-6 rounded-xl shadow-lg text-white">
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-teal-700 via-teal-800 to-slate-900 p-6 text-white shadow-clinic md:col-span-2 xl:col-span-1">
+          <div aria-hidden="true" className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-clay-400/20 blur-2xl" />
           <h3 className="font-medium opacity-90 mb-2 text-lg">快速操作</h3>
           <div className="space-y-3">
-            <button onClick={() => onViewChange('patients')} className="w-full bg-white/20 hover:bg-white/30 text-left px-4 py-3 rounded-lg text-base transition-colors flex items-center gap-2">
+            <button onClick={() => onViewChange('patients')} className="relative flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-left text-base transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay-300">
               <Plus size={18} /> 新增患者
             </button>
-            <button onClick={() => onViewChange('schedule')} className="w-full bg-white/20 hover:bg-white/30 text-left px-4 py-3 rounded-lg text-base transition-colors flex items-center gap-2">
+            <button onClick={() => onViewChange('schedule')} className="relative flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-left text-base transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay-300">
               <Clock size={18} /> 查看今日日程
             </button>
           </div>
@@ -62,11 +63,11 @@ export const Dashboard = ({ patients, onViewChange, onPatientClick, onRefresh }:
 
       <TreatmentContributionWall contribution={contribution} />
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+      <div className="rounded-2xl border border-slate-200 bg-surface p-6 shadow-sm">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-xl font-bold text-slate-800">今日预约列表</h3>
           {todayAppts.length > 0 && (
-            <Button size="md" onClick={() => setShowAppointmentModal(true)}>
+            <Button variant="accent" size="md" onClick={() => setShowAppointmentModal(true)}>
               <Plus size={16} className="mr-2" /> 新建预约
             </Button>
           )}
@@ -74,7 +75,7 @@ export const Dashboard = ({ patients, onViewChange, onPatientClick, onRefresh }:
         {todayAppts.length === 0 ? (
           <div className="text-center py-8 bg-slate-50 rounded-lg text-lg">
             <p className="text-slate-400">今日暂无预约</p>
-            <Button className="mt-5" size="lg" onClick={() => setShowAppointmentModal(true)}>
+            <Button variant="accent" className="mt-5" size="lg" onClick={() => setShowAppointmentModal(true)}>
               <Plus size={18} className="mr-2" /> 新建预约
             </Button>
           </div>
@@ -130,7 +131,7 @@ const TreatmentContributionWall = ({ contribution }: { contribution: TreatmentCo
   const hasActivity = contribution.total > 0;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 mb-8">
+    <div className="mb-8 rounded-2xl border border-slate-200 bg-surface p-6 shadow-sm">
       <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
         <div>
           <h3 className="text-xl font-bold text-slate-800">处置完成记录</h3>

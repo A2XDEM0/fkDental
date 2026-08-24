@@ -256,14 +256,14 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-900 relative">
-      <aside className={`${sidebarCollapsed ? 'w-20' : 'w-64'} relative z-20 flex flex-shrink-0 flex-col bg-slate-900 text-slate-300 shadow-xl transition-[width] duration-300`}>
-        <div className={`${sidebarCollapsed ? 'p-3' : 'p-4'} border-b border-slate-800`}>
+    <div className="relative flex h-screen overflow-hidden bg-canvas font-sans text-slate-900">
+      <aside className={`${sidebarCollapsed ? 'w-20' : 'w-64'} relative z-20 flex flex-shrink-0 flex-col bg-gradient-to-b from-slate-900 to-teal-950 text-slate-300 shadow-clinic transition-[width] duration-300`}>
+        <div className={`${sidebarCollapsed ? 'p-3' : 'p-4'} border-b border-white/10`}>
           <div className={`flex min-w-0 items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-            <img src="./app-icon.png" alt="" className="h-11 w-11 rounded-xl bg-white object-cover shadow-sm flex-shrink-0" />
+            <img src="./app-icon.png" alt="" className="h-11 w-11 flex-shrink-0 rounded-xl bg-surface object-cover shadow-sm ring-1 ring-white/20" />
             {!sidebarCollapsed && <div className="min-w-0 flex-1">
               <div className="font-bold text-lg leading-tight text-white truncate">{clinicName}</div>
-              <div className="mt-1 text-xs font-mono text-slate-500">v{APP_VERSION}</div>
+              <div className="mt-1 font-mono text-xs text-slate-400">v{APP_VERSION}</div>
             </div>}
           </div>
         </div>
@@ -273,7 +273,7 @@ export default function App() {
           aria-label={sidebarCollapsed ? '展开侧边栏' : '收起侧边栏'}
           title={sidebarCollapsed ? '展开侧边栏' : '收起侧边栏'}
           onClick={() => setSidebarCollapsed(value => !value)}
-          className="absolute -right-3 top-[72px] z-30 flex h-7 w-7 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-slate-300 shadow-md transition-colors hover:bg-teal-600 hover:text-white"
+          className="absolute -right-3 top-[72px] z-30 flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-teal-950 text-slate-300 shadow-md transition-colors hover:bg-clay-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay-300"
         >
           {sidebarCollapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
         </button>
@@ -317,7 +317,7 @@ export default function App() {
             />
           </nav>
 
-          <section aria-label="数据工具" className={`${sidebarCollapsed ? 'pt-3' : 'mx-1 pt-4'} mt-4 space-y-1 border-t border-slate-800`}>
+          <section aria-label="数据工具" className={`${sidebarCollapsed ? 'pt-3' : 'mx-1 pt-4'} mt-4 space-y-1 border-t border-white/10`}>
             {!sidebarCollapsed && (
               <div className="px-3 pb-1 text-[11px] font-bold tracking-wider text-slate-500">数据工具</div>
             )}
@@ -357,13 +357,13 @@ export default function App() {
           </section>
         </div>
 
-        <div className={`${sidebarCollapsed ? 'p-2' : 'p-4'} border-t border-slate-800`}>
+        <div className={`${sidebarCollapsed ? 'p-2' : 'p-4'} border-t border-white/10`}>
           <button
             type="button"
             onClick={() => setShowSettings(true)}
             aria-label="系统设置"
             title={sidebarCollapsed ? '系统设置' : undefined}
-            className={`flex w-full items-center rounded-lg py-3 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white ${sidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-4'}`}
+            className={`flex w-full items-center rounded-xl py-3 text-slate-400 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay-300 ${sidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-4'}`}
           >
             <Settings size={20} className="shrink-0" />
             <span className={sidebarCollapsed ? 'sr-only' : 'font-medium'}>系统设置</span>

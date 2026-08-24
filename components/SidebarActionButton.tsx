@@ -33,7 +33,7 @@ export const SidebarActionButton = ({
       } ${
         disabled
           ? 'cursor-not-allowed text-slate-600'
-          : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+          : 'text-slate-400 hover:bg-white/10 hover:text-white'
       }`}
     >
       <span className="relative shrink-0">
