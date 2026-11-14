@@ -36,5 +36,7 @@ export interface ElectronSqliteStoreBridge {
 declare global {
   interface Window {
     electronSqliteStore?: ElectronSqliteStoreBridge;
+    electronPlatform?: string;
+    electronTrafficLightsWidth?: number;
   }
 }

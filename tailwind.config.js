@@ -1,3 +1,8 @@
+// 颜色全部指向 theme.css 里的变量，深浅色主题在那里切换；这里只做类名到变量的映射。
+const SHADES = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+const themed = variable => `color-mix(in srgb, var(${variable}) calc(<alpha-value> * 100%), transparent)`;
+const scale = name => Object.fromEntries(SHADES.map(shade => [shade, themed(`--c-${name}-${shade}`)]));
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -12,69 +17,36 @@ export default {
   theme: {
     extend: {
       colors: {
-        // B 风格：用暖米色中性取代冷灰，并让深色阶自然过渡到森林绿侧栏。
-        slate: {
-          50: '#F7F3EC',
-          100: '#EFE8DE',
-          200: '#E3D9CC',
-          300: '#CFC2B2',
-          400: '#9A9187',
-          500: '#756D64',
-          600: '#5D5851',
-          700: '#48453F',
-          800: '#303C37',
-          900: '#1F2F2B',
-          950: '#111C19',
-        },
-        // 现有 teal 类继续作为品牌语义使用，但实际呈现为更温润的森林绿。
-        teal: {
-          50: '#EFF6F2',
-          100: '#DDECE4',
-          200: '#BFD8CC',
-          300: '#91BBA7',
-          400: '#639A83',
-          500: '#3E806B',
-          600: '#176B5B',
-          700: '#14594C',
-          800: '#12483E',
-          900: '#103B34',
-          950: '#08231E',
-        },
-        clay: {
-          50: '#FFF4EF',
-          100: '#FFE6DA',
-          200: '#F7CDBB',
-          300: '#EFA889',
-          400: '#E58B66',
-          500: '#D97757',
-          600: '#C86143',
-          700: '#A84D34',
-          800: '#883F30',
-          900: '#70372C',
-          950: '#3C1B16',
-        },
-        sage: {
-          50: '#F4F7F3',
-          100: '#E6EEE8',
-          200: '#CCDCCF',
-          300: '#AAC5B0',
-          400: '#8FAF9F',
-          500: '#6E9380',
-          600: '#577767',
-          700: '#465F53',
-          800: '#3B4E45',
-          900: '#334139',
-          950: '#19231F',
-        },
-        canvas: '#F7F3EC',
-        surface: '#FFFDF9',
+        white: themed('--c-white'),
+        slate: scale('slate'),
+        teal: scale('teal'),
+        red: scale('red'),
+        rose: scale('red'),
+        green: scale('green'),
+        emerald: scale('green'),
+        amber: scale('amber'),
+        orange: scale('amber'),
+        blue: scale('blue'),
+        sky: scale('blue'),
+        violet: scale('violet'),
+        // v1.3.3 引入的陶土色点缀，这里并到暖色（amber）上。
+        clay: scale('amber'),
+        canvas: themed('--c-slate-50'),
+        surface: themed('--c-white'),
+        primary: themed('--c-primary'),
+        'on-primary': themed('--c-on-primary')
       },
       fontFamily: {
-        sans: ['Inter', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', 'system-ui', 'sans-serif'],
+        sans: ['"Google Sans Flex Variable"', '"Noto Sans SC Variable"', '"PingFang SC"', '"Microsoft YaHei"', 'system-ui', 'sans-serif'],
+        mono: ['"Google Sans Code Variable"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace']
+      },
+      // Noto Sans SC 的 700 在界面里偏重，标题统一用 600。
+      fontWeight: {
+        bold: '600'
       },
       boxShadow: {
-        clinic: '0 14px 34px rgba(36, 63, 58, 0.12)',
-      },
+        clinic: '0 14px 34px rgb(0 0 0 / 0.12)'
+      }
     }
   },
   plugins: []

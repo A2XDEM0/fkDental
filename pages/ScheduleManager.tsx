@@ -250,7 +250,7 @@ export const ScheduleManager = ({ patients, onRefresh, onPatientClick }: { patie
                   className={`relative cursor-crosshair border-r border-slate-200 last:border-r-0 ${dateKey === today ? 'bg-rose-50/30' : ''}`}
                   style={{
                     height: slots.length * SLOT_HEIGHT,
-                    backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${SLOT_HEIGHT - 1}px, rgb(226 232 240) ${SLOT_HEIGHT - 1}px, rgb(226 232 240) ${SLOT_HEIGHT}px)`
+                    backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${SLOT_HEIGHT - 1}px, var(--c-slate-200) ${SLOT_HEIGHT - 1}px, var(--c-slate-200) ${SLOT_HEIGHT}px)`
                   }}
                 >
                   {dayAppointments.map(({ appointment, lane, laneCount }) => {

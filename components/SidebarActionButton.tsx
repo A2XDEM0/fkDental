@@ -28,12 +28,12 @@ export const SidebarActionButton = ({
       aria-label={accessibleLabel}
       aria-describedby={disabled && disabledTitle ? disabledDescriptionId : undefined}
       title={collapsed || disabled ? (disabled && disabledTitle ? disabledTitle : label) : undefined}
-      className={`flex w-full items-center rounded-lg py-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
-        collapsed ? 'justify-center px-2' : 'gap-3 px-4'
+      className={`flex h-9 w-full items-center rounded-full text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
+        collapsed ? 'justify-center' : 'gap-3 px-4'
       } ${
         disabled
-          ? 'cursor-not-allowed text-slate-600'
-          : 'text-slate-400 hover:bg-white/10 hover:text-white'
+          ? 'cursor-not-allowed text-slate-400'
+          : 'text-slate-700 hover:bg-slate-200'
       }`}
     >
       <span className="relative shrink-0">
@@ -41,11 +41,11 @@ export const SidebarActionButton = ({
         {badge && (
           <span
             aria-hidden="true"
-            className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-amber-400 ring-2 ring-slate-900"
+            className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-red-600 ring-2 ring-slate-100"
           />
         )}
       </span>
-      <span className={collapsed ? 'sr-only' : 'font-medium'}>{label}</span>
+      <span className={collapsed ? 'sr-only' : 'truncate'}>{label}</span>
       {disabled && disabledTitle && (
         <span id={disabledDescriptionId} className="sr-only">{disabledTitle}</span>
       )}

@@ -67,7 +67,7 @@ export const PatientDetail = ({ patient, onBack, onRefresh }: { patient: Patient
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50">
+    <div className="flex flex-col h-full bg-slate-50" data-unsaved-edit={editingInfo || undefined}>
       <div className="bg-white border-b border-slate-200 px-8 py-6 flex items-center justify-between shadow-sm flex-shrink-0">
         <div className="flex items-center gap-6">
           <Button variant="secondary" size="md" onClick={onBack}>

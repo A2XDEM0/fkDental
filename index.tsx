@@ -1,8 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import '@fontsource-variable/noto-sans-sc/wght.css';
+import './theme.css';
 import './index.css';
 import { clinicService } from './services/clinicService';
+import { initializeTheme } from './utils/theme';
+
+initializeTheme();
 
 // 移除 RAG/AI 功能后，清理旧版本遗留的知识库、接口地址和 API Key 配置。
 ['ragKnowledgeEntries', 'ragAiSettings', 'ragExternalSources'].forEach(key => localStorage.removeItem(key));
@@ -15,7 +20,7 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 
 root.render(
-  <div className="flex h-screen items-center justify-center bg-slate-50 text-slate-500">
+  <div className="flex h-screen items-center justify-center bg-white text-slate-500">
     正在加载诊所数据...
   </div>
 );

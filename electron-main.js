@@ -789,7 +789,11 @@ function createWindow() {
       contextIsolation: true
     },
     autoHideMenuBar: true,
-    titleBarStyle: 'default'
+    // macOS 下隐藏标题栏，把红绿灯嵌进侧栏顶部；其他平台保留系统标题栏。
+    // 红绿灯左边距 12，和侧栏内容的左边缘对齐；纵向居中在侧栏顶部 44px 的留位里。
+    // macOS 26 起按钮变大（14pt 高），要比旧系统上移 1pt。收起后的侧栏宽度见 preload.cjs。
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+    trafficLightPosition: { x: 12, y: Number.parseInt(process.getSystemVersion(), 10) >= 26 ? 15 : 16 }
   });
   const startUrl = process.env.ELECTRON_START_URL || `file://${path.join(__dirname, 'dist/index.html')}`;
   mainWindow.loadURL(startUrl);

@@ -8,7 +8,7 @@ import { patientMatchesSearch } from '../utils/patientSearch';
 export const CALENDAR_CELL_SIZE_PX = 59;
 export const CALENDAR_DATE_FONT_SIZE_PX = 20;
 export const CALENDAR_ROW_BUTTON_WIDTH_PX = 34;
-export const CALENDAR_FONT_FAMILY = '"Noto Sans Mono", monospace';
+export const CALENDAR_FONT_FAMILY = '"Google Sans Code Variable", "Noto Sans Mono", monospace';
 export const CALENDAR_MONTH_FONT_FAMILY = '"Century Gothic", CenturyGothic, sans-serif';
 
 const CALENDAR_HEADER_HEIGHT_PX = 38;
@@ -373,7 +373,7 @@ export const PatientCalendar = ({
                       {summaries.length > 0 && (
                         <span
                           className="absolute right-0 top-0 z-20 flex h-4 min-w-4 items-center justify-center px-0.5 text-[9px] font-bold leading-none"
-                          style={{ backgroundColor: 'var(--calendar-activity)', color: '#ffffff' }}
+                          style={{ backgroundColor: 'var(--calendar-activity)', color: 'var(--calendar-activity-text)' }}
                         >
                           {summaries.length}
                         </span>
