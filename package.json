@@ -1,14 +1,14 @@
 {
   "name": "dental-clinic-manager",
   "private": true,
-  "version": "1.3.3",
+  "version": "1.4.0",
   "license": "AGPL-3.0-only",
   "description": "DentalSystem 口腔诊所管理系统",
   "author": {
     "name": "SlxBYR",
     "email": "rnfmabj007@163.com"
   },
-  "homepage": "https://github.com/SlxBYR/dental-clinic-manager",
+  "homepage": "https://github.com/A2XDEM0/fkDental",
   "type": "module",
   "main": "electron-main.js",
   "scripts": {
