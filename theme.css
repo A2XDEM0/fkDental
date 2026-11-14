@@ -1,0 +1,93 @@
+/*
+ * 主题：配色参照 Google Material 3 的基准色，字体用 Google Sans Flex + Noto Sans SC。
+ *
+ * 页面里写的仍是 Tailwind 的 slate / teal / red … 类名，tailwind.config.js 把它们指到下面的变量：
+ *   slate = 中性色，teal = 主色（Google 蓝），red / green / amber / blue 是状态色，white = 最底层的表面色。
+ * 浅色主题下色阶按字面取值（50 最浅）；深色主题下整条色阶倒过来，
+ * 所以 `bg-white text-slate-900 border-slate-200` 这类写法不用改就能跟着主题变。
+ *
+ * 影像页是按“深底浅字”写的，和其他页面相反，用三个作用域类处理：
+ *   .tone-flip   跟随主题，但取相反的色阶（深底写法在浅色主题下显示为浅色）
+ *   .tone-dark   固定按字面取值，用于始终深色的三维视口和切面
+ *   .tone-light  固定按字面取值，用于始终浅色的内容（牙位图）
+ */
+
+@font-face {
+  font-family: 'Google Sans Flex Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 1 1000;
+  src: url('./node_modules/@fontsource-variable/google-sans-flex/files/google-sans-flex-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+  font-family: 'Google Sans Code Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 800;
+  src: url('./node_modules/@fontsource-variable/google-sans-code/files/google-sans-code-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+:root,
+:root[data-theme='dark'] .tone-flip,
+.tone-dark,
+.tone-light {
+  --c-slate-50: #f8fafd; --c-slate-100: #f0f4f9; --c-slate-200: #dde3ea; --c-slate-300: #c4c7c5; --c-slate-400: #9aa0a6; --c-slate-500: #70757a; --c-slate-600: #444746; --c-slate-700: #333537; --c-slate-800: #1e1f20; --c-slate-900: #131314; --c-slate-950: #0b0b0c;
+  --c-teal-50: #e8f0fe; --c-teal-100: #d3e3fd; --c-teal-200: #a8c7fa; --c-teal-300: #7cacf8; --c-teal-400: #4c8df6; --c-teal-500: #1b6ef3; --c-teal-600: #0b57d0; --c-teal-700: #0842a0; --c-teal-800: #062e6f; --c-teal-900: #041e49; --c-teal-950: #021533;
+  --c-red-50: #fce8e6; --c-red-100: #fad2cf; --c-red-200: #f6aea9; --c-red-300: #f28b82; --c-red-400: #ee675c; --c-red-500: #ea4335; --c-red-600: #d93025; --c-red-700: #c5221f; --c-red-800: #a50e0e; --c-red-900: #7a1410; --c-red-950: #450d0a;
+  --c-green-50: #e6f4ea; --c-green-100: #ceead6; --c-green-200: #a8dab5; --c-green-300: #81c995; --c-green-400: #5bb974; --c-green-500: #34a853; --c-green-600: #1e8e3e; --c-green-700: #188038; --c-green-800: #137333; --c-green-900: #0d652d; --c-green-950: #0a3d1c;
+  --c-amber-50: #fef7e0; --c-amber-100: #feefc3; --c-amber-200: #fde293; --c-amber-300: #fdd663; --c-amber-400: #fcc934; --c-amber-500: #fbbc04; --c-amber-600: #e37400; --c-amber-700: #b06000; --c-amber-800: #8a4b00; --c-amber-900: #693a00; --c-amber-950: #3d2200;
+  --c-blue-50: #e8f0fe; --c-blue-100: #d2e3fc; --c-blue-200: #aecbfa; --c-blue-300: #8ab4f8; --c-blue-400: #669df6; --c-blue-500: #4285f4; --c-blue-600: #1a73e8; --c-blue-700: #1967d2; --c-blue-800: #185abc; --c-blue-900: #174ea6; --c-blue-950: #0d2f66;
+  --c-violet-50: #f3e8fd; --c-violet-100: #e9d2fd; --c-violet-200: #d7aefb; --c-violet-300: #c58af9; --c-violet-400: #af5cf7; --c-violet-500: #a142f4; --c-violet-600: #9334e6; --c-violet-700: #8430ce; --c-violet-800: #7627bb; --c-violet-900: #681da8; --c-violet-950: #3b0f63;
+  --c-white: #ffffff;
+}
+
+:root[data-theme='dark'],
+:root:not([data-theme='dark']) .tone-flip {
+  --c-slate-50: #1a1b1c; --c-slate-100: #1e1f20; --c-slate-200: #333537; --c-slate-300: #444746; --c-slate-400: #80868b; --c-slate-500: #9aa0a6; --c-slate-600: #c4c7c5; --c-slate-700: #d5d8d6; --c-slate-800: #e3e3e3; --c-slate-900: #f0f4f9; --c-slate-950: #ffffff;
+  --c-teal-50: #14213a; --c-teal-100: #0f3272; --c-teal-200: #0842a0; --c-teal-300: #0b57d0; --c-teal-400: #4c8df6; --c-teal-500: #7cacf8; --c-teal-600: #a8c7fa; --c-teal-700: #bfd6fc; --c-teal-800: #d3e3fd; --c-teal-900: #e8f0fe; --c-teal-950: #f5f8ff;
+  --c-red-50: #450d0a; --c-red-100: #60110d; --c-red-200: #7a1410; --c-red-300: #a50e0e; --c-red-400: #d93025; --c-red-500: #ea4335; --c-red-600: #ee675c; --c-red-700: #f28b82; --c-red-800: #f6aea9; --c-red-900: #fad2cf; --c-red-950: #fce8e6;
+  --c-green-50: #0a3d1c; --c-green-100: #0c5125; --c-green-200: #0d652d; --c-green-300: #137333; --c-green-400: #1e8e3e; --c-green-500: #34a853; --c-green-600: #5bb974; --c-green-700: #81c995; --c-green-800: #a8dab5; --c-green-900: #ceead6; --c-green-950: #e6f4ea;
+  --c-amber-50: #3d2200; --c-amber-100: #532e00; --c-amber-200: #693a00; --c-amber-300: #8a4b00; --c-amber-400: #e37400; --c-amber-500: #fbbc04; --c-amber-600: #fcc934; --c-amber-700: #fdd663; --c-amber-800: #fde293; --c-amber-900: #feefc3; --c-amber-950: #fef7e0;
+  --c-blue-50: #0d2f66; --c-blue-100: #123f86; --c-blue-200: #174ea6; --c-blue-300: #185abc; --c-blue-400: #1a73e8; --c-blue-500: #4285f4; --c-blue-600: #669df6; --c-blue-700: #8ab4f8; --c-blue-800: #aecbfa; --c-blue-900: #d2e3fc; --c-blue-950: #e8f0fe;
+  --c-violet-50: #3b0f63; --c-violet-100: #521686; --c-violet-200: #681da8; --c-violet-300: #7627bb; --c-violet-400: #9334e6; --c-violet-500: #a142f4; --c-violet-600: #af5cf7; --c-violet-700: #c58af9; --c-violet-800: #d7aefb; --c-violet-900: #e9d2fd; --c-violet-950: #f3e8fd;
+  --c-white: #131314;
+}
+
+/* 主按钮的颜色跟外观走，不跟色阶走；.tone-flip 不设置，直接继承主题的值。 */
+:root,
+.tone-light {
+  --c-primary: #0b57d0;
+  --c-on-primary: #ffffff;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'],
+.tone-dark {
+  --c-primary: #a8c7fa;
+  --c-on-primary: #062e6f;
+  color-scheme: dark;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-slate-300) transparent;
+}
+
+/* 没有显式底色的原生输入框跟随所在容器，而不是用浏览器在深色下的默认灰底。 */
+input,
+select,
+textarea {
+  background-color: transparent;
+}
+
+/* macOS 隐藏标题栏后，用这两个类标出可以拖动窗口的区域和其中不能拖的控件。 */
+.app-drag {
+  -webkit-app-region: drag;
+}
+
+.app-no-drag {
+  -webkit-app-region: no-drag;
+}

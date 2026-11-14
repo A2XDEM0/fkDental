@@ -8,31 +8,30 @@ body,
   height: 100%;
 }
 
+/* 报表图表和日历用到的语义色，取值来自 theme.css 的调色板，跟随深浅色主题。 */
 :root {
-  color-scheme: light;
-  --clinic-canvas: #f7f3ec;
-  --clinic-surface: #fffdf9;
-  --clinic-brand: #176b5b;
-  --clinic-brand-deep: #243f3a;
-  --clinic-clay: #d97757;
-  --clinic-sage: #8faf9f;
-  --chart-revenue: #176b5b;
-  --chart-revenue-fill: #8faf9f;
-  --chart-traffic: #477b91;
-  --chart-traffic-fill: #a8c5d0;
-  --chart-average: #d97757;
-  --chart-average-fill: #efa889;
-  --chart-grid: #e3d9cc;
-  --chart-grid-strong: #9a9187;
-  --chart-band: #faf7f1;
-  --calendar-today: #d97757;
-  --calendar-activity: #176b5b;
+  --clinic-canvas: var(--c-slate-50);
+  --clinic-surface: var(--c-white);
+  --clinic-brand: var(--c-teal-600);
+  --clinic-brand-deep: var(--c-teal-800);
+  --clinic-clay: var(--c-amber-600);
+  --clinic-sage: var(--c-green-400);
+  --chart-revenue: var(--c-teal-600);
+  --chart-revenue-fill: var(--c-teal-200);
+  --chart-traffic: var(--c-green-600);
+  --chart-traffic-fill: var(--c-green-200);
+  --chart-average: var(--c-amber-600);
+  --chart-average-fill: var(--c-amber-300);
+  --chart-grid: var(--c-slate-200);
+  --chart-grid-strong: var(--c-slate-400);
+  --chart-band: var(--c-slate-50);
+  --calendar-today: var(--c-teal-600);
+  --calendar-activity: var(--c-teal-200);
+  --calendar-activity-text: var(--c-teal-900);
 }
 
 body {
   margin: 0;
-  background: var(--clinic-canvas);
-  font-family: Inter, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
 }
 
 button,
@@ -43,12 +42,12 @@ textarea {
 }
 
 ::selection {
-  background: #bfd8cc;
-  color: #103b34;
+  background: var(--c-teal-200);
+  color: var(--c-teal-900);
 }
 
 .report-chart-scrollbar {
-  scrollbar-color: #6e9380 #efe8de;
+  scrollbar-color: var(--c-slate-400) var(--c-slate-100);
   scrollbar-gutter: stable;
   scrollbar-width: auto;
 }
@@ -58,19 +57,19 @@ textarea {
 }
 
 .report-chart-scrollbar::-webkit-scrollbar-track {
-  background: #efe8de;
-  border-top: 1px solid #e3d9cc;
+  background: var(--c-slate-100);
+  border-top: 1px solid var(--c-slate-200);
 }
 
 .report-chart-scrollbar::-webkit-scrollbar-thumb {
   min-width: 64px;
-  border: 3px solid #efe8de;
+  border: 3px solid var(--c-slate-100);
   border-radius: 999px;
-  background: #6e9380;
+  background: var(--c-slate-400);
 }
 
 .report-chart-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #176b5b;
+  background: var(--c-teal-600);
 }
 
 @media (prefers-reduced-motion: reduce) {

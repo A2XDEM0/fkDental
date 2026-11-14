@@ -148,7 +148,7 @@ export const ToothSelector = ({ value, onChange }: { value: string, onChange: (v
       </div>
 
       <div className="w-full overflow-x-auto">
-        <div className="relative mx-auto min-w-[760px] max-w-[920px] aspect-[1756/895] rounded-lg bg-white">
+        <div className="tone-light relative mx-auto min-w-[760px] max-w-[920px] aspect-[1756/895] rounded-lg bg-white">
           <img
             src="./tooth-chart.png"
             alt="牙位选择图"
